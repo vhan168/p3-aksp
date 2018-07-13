@@ -1,4 +1,10 @@
 {% load static %}
+<!--
+  https://hangouts.google.com/_/elUi/chat-redirect?dest=https%3A%2F%2Fdocs.google.com%2Fdocument%2Fd%2F1_oya170vqtX2ISyOOy5gTzfgbhVoD_D9xP07ILn7r64%2Fedit
+  http://paperjs.org/reference/tool/
+http://paperjs.org/tutorials/interaction/mouse-tool-events/
+http://paperjs.org/reference/gradient/
+-->
 
 <!DOCTYPE html>
 <html>
@@ -6,8 +12,8 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   	<title>P3 Coloring</title>
 
-	<script type="text/javascript" src="{% static 'coloring/vendors/jquery/jquery-3.3.1.min.js' %}"></script>
-	<script type="text/javascript" src="{% static 'coloring/vendors/paper/paper-full.min.js' %}"></script>
+	    <script type="text/javascript" src="{% static 'coloring/vendors/jquery/jquery-3.3.1.min.js' %}"></script>
+		<script type="text/javascript" src="{% static 'coloring/vendors/paper/paper-full.min.js' %}"></script>
 
 	<style type="text/css">
 		#color-palette {
@@ -27,7 +33,7 @@
 			border-radius: 12px;
 			margin: 3px;
 		}
-
+		
 		#myCanvas {
 			padding-left: 0;
 		    padding-right: 0;
@@ -35,11 +41,42 @@
 		    margin-right: auto;
 		    display: block;
 		}
+		.boxer {
+			border:1px solid #333;
+		}
 	</style>
 
-	<script type="text/javascript" canvas="canvas">
+	<script type="text/javascript" canvas="canvas">        
 		window.onload = function() {
+      var center_x = paper.view.center.x;
+      var center_y = paper.view.center.y;
+      
+      var p1 = new paper.Point(center_x - 40, center_y - 40);
+      var p2 = new paper.Point(center_x + 140, center_y - 40);
+      var p3 = new paper.Point(center_x + 140, center_y +140);
+      var p4 = new paper.Point(center_x - 40, center_y +140);
+      
+  var beam = new paper.Path();
+      //paper.view.center, new size(150, 50)
+    
+	beam.strokeColor = "black";
+	
+	beam.add(p1,p2,p3,p4,p1);
+ 
+/*<canvas id="myCanvas" resize></canvas>
+  var rect = new Rectangle(new Point(20, 20), new Size(100, 100));
+  var newPath = new Path.Rectangle(rect);
+  newPath.strokeColor = "black";
+  rect.fillColor = "red";*/
+	beam.fillColor = "#EE0000";
+      
 			var canvas = document.getElementById('myCanvas');
+      
+      var colorChoice = "#000000";
+			
+			var startPoint = new paper.Point();
+			
+			var colorBefore = new paper.Color("#000000");
 
 			// coloring page
 			var mandala = {
@@ -59,13 +96,33 @@
 			// you may also add code outside of the function (e.g., global variables)
 			function myGradientInteraction(){
 				var tool = new paper.Tool();
+        
+
 
 				tool.onMouseDown = function (event) {
-
+          //console.log("down"+event.point);
+					var tempp = cp.history[cp.history.length - 1];
+					var prehex = tempp.substring(4,tempp.length-1).split(", ");
+					var hexrgb = rgb2hex(prehex[0],prehex[1],prehex[2]);
+          //console.log(hexrgb);
+          colorChoice = hexrgb;
+          startPoint = event.point;
 				}
-
+        //On mouseup, set the fillColor of the rectangle to a  gradient color object as follows: 
 				tool.onMouseUp = function (event) {
-					
+					console.log("up"+event.point+" start: "+startPoint);
+          //beam.fillColor = colorChoice;
+					var dest = new paper.Point(event.point.x/2, event.point.y/2)
+					beam.fillColor = new paper.Color({
+              gradient: {
+                //stops: the last two colors selected from the color palette (cp.history)
+                stops: [colorChoice, colorBefore]
+              },
+                //origin: the mousedown point
+                origin: startPoint,
+                //destination: the mouseup point
+                destination: event.point
+          });
 				}
 			}
 
@@ -77,6 +134,7 @@
 				tool.onMouseDown = function (event) {
 				    var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
 				    if (hit) {
+								
 				        hit.item.fillColor = cp.history[cp.history.length - 1];
 				    }
 				}
@@ -92,6 +150,7 @@
 									   .addClass("swatch");
 					$swatch.click(function(){
 						// add color to the color palette history
+						colorBefore = colorChoice;
 					  	cp.history.push($(this).css("background-color"));
 					});
 					cp.$container.append($swatch);
@@ -113,18 +172,24 @@
 			function init(custom){
 				paper.setup(canvas);
 				getColorsCreatePalette();
-
+				/*
 				paper.project.importSVG(mandala.filePath, function(item) { 
 					mandala.item = item._children["design-freepik"];
 				    paper.project.insertLayer(0,mandala.item);
-
 				    if (custom) {
 				    	myCustomInteraction();	
 				    } else {
 				    	myGradientInteraction();
 				    }		
 					
-				}); 
+				});*/
+				if (custom) {
+				    	myCustomInteraction();	
+				    } else {
+				    	myGradientInteraction();
+				    }		
+				
+			 
 			}
 
 			// To see your myGradientInteraction version visit: 
@@ -138,11 +203,18 @@
 				init(true);
 			}
 		}
+		function rgb2hex(red, green, blue) {
+        var rgb = blue | (green << 8) | (red << 16);
+        return '#' + (0x1000000 + rgb).toString(16).slice(1)
+  }
+		
 	</script>
 </head>
-<body>	
-
-	<canvas id="myCanvas" width="750px" height="750px"></canvas>
-	<div id="color-palette"></div>
+<body>
+				<canvas id="myCanvas" width="750px" height="750px"></canvas>
+	<script type="text/paperscript" canvas="myCanvas">
+	
+	</script>
+			<div id="color-palette"></div>
 </body>
 </html>
